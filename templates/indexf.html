@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            async function tc() {
+            let response = await fetch("/taim");
+            let text = await response.text();
+            return text
+}
+            document.getElementById('vid').addEventListener('loadedmetadata',   async function() {
+                this.currentTime = await tc();
+            }, false);
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+            var name = prompt('Введите ваше имя (макс. 20 символов):');
+            if (!name || name.length > 20) {
+                name = 'Guest';
+            }
+
+            socket.on('connect', function() {
+                socket.emit('user_connected', {name: name});
+            });
+
+            socket.on('message', function(data) {
+                $('#chat').append('<p><strong>' + data.name + ':</strong> ' + data.message + '</p>');
+            });
+
+            socket.on('online_count', function(data) {
+                $('#online_count').text('Онлайн: ' + data.count);
+            });
+
+            $('#message_form').submit(function(event) {
+                event.preventDefault();
+                var message = $('#message_input').val();
+                socket.emit('message', {name: name, message: message});
+                $('#message_input').val('');
+            });
+        });
+    </script>
+</head>
+<body>
+    <video id="vid" width="400" height="300" autoplay muted>
+        <source src="tr.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+        Тег video не поддерживается вашим браузером. 
+    </video>
+    <div id="chat"></div>
+    <form id="message_form">
+        <input type="text" id="message_input" autocomplete="off" placeholder="Введите сообщение...">
+        <button type="submit">Отправить</button>
+    </form>
+    <div id="online_count"></div>
+</body>
+</html>
